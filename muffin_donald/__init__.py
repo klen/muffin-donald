@@ -34,8 +34,13 @@ class Plugin(BasePlugin):
         "queue_name": 'tasks',
     }
 
-    donald: Donald = None
     __exc_handler: t.Optional[t.Callable] = None
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the plugin."""
+        self.donald: Donald = None
+        self.schedules = []
+        super(Plugin, self).__init__(*args, **kwargs)
 
     def setup(self, app: Application, **options):
         """Setup Donald tasks manager."""
@@ -67,6 +72,9 @@ class Plugin(BasePlugin):
 
         started = False
         if self.cfg.autostart:
+            for interval, task in self.schedules:
+                donald.schedule(interval)(task)
+
             started = await donald.start()
 
         if donald.queue:
@@ -78,4 +86,5 @@ class Plugin(BasePlugin):
         """Shutdown self tasks manager."""
         donald = t.cast(Donald, self.donald)
         await donald.stop()
-        await donald.queue.stop()
+        if donald.queue:
+            await donald.queue.stop()
