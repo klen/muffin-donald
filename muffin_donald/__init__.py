@@ -7,7 +7,7 @@ from muffin import Application
 from muffin.plugins import BasePlugin
 
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __project__ = "muffin-donald"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
