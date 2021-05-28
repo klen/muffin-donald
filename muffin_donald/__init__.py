@@ -29,9 +29,9 @@ class Plugin(BasePlugin):
         "max_tasks_per_worker": Donald.defaults['max_tasks_per_worker'],
         "filelock": Donald.defaults['filelock'],
         "loglevel": Donald.defaults['loglevel'],
+        "queue": False,
         "queue_exchange": 'tasks',
         "queue_name": 'tasks',
-        "queue_params": {},
     }
 
     donald: Donald = None
@@ -45,10 +45,10 @@ class Plugin(BasePlugin):
             filelock=self.cfg.filelock,
             loglevel=self.cfg.loglevel,
             num_workers=self.cfg.num_workers,
-            queue=dict(
-                self.cfg.queue_params, exchange=self.cfg.queue_exchange, queue=self.cfg.queue_name)
+            queue=self.cfg.queue,
+            queue_name=self.cfg.queue_name,
+            queue_exchange=self.cfg.queue_exchange,
         )
-
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
 
@@ -64,12 +64,15 @@ class Plugin(BasePlugin):
     async def startup(self):
         """Startup self tasks manager."""
         donald = t.cast(Donald, self.donald)
+
         started = False
         if self.cfg.autostart:
             started = await donald.start()
-        await donald.queue.connect()
-        if started:
-            await donald.queue.start()
+
+        if donald.queue:
+            await donald.queue.connect()
+            if started:
+                await donald.queue.start()
 
     async def shutdown(self):
         """Shutdown self tasks manager."""

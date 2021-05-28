@@ -26,6 +26,7 @@ async def test_base(app):
 
     async with manage_lifespan(app):
         assert tasks.donald._started
+        assert len(tasks.donald.workers) == 2
         res = await tasks.submit(task1)
         assert res == 42
 
