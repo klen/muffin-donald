@@ -30,8 +30,8 @@ class Plugin(BasePlugin):
         "filelock": Donald.defaults['filelock'],
         "loglevel": Donald.defaults['loglevel'],
         "queue": False,
-        "queue_exchange": 'tasks',
         "queue_name": 'tasks',
+        "queue_params": {},
     }
 
     donald: Donald = None
@@ -50,9 +50,8 @@ class Plugin(BasePlugin):
             filelock=self.cfg.filelock,
             loglevel=self.cfg.loglevel,
             num_workers=self.cfg.num_workers,
-            queue=self.cfg.queue,
             queue_name=self.cfg.queue_name,
-            queue_exchange=self.cfg.queue_exchange,
+            queue_params=self.cfg.queue_params,
         )
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
@@ -60,11 +59,6 @@ class Plugin(BasePlugin):
     def __getattr__(self, name):
         """Proxy attributes to the tasks manager."""
         return getattr(self.donald, name)
-
-    def on_error(self, fn: T) -> T:
-        """Register an error handler."""
-        self.__exc_handler = fn
-        return fn
 
     async def startup(self):
         """Startup self tasks manager."""
@@ -81,3 +75,15 @@ class Plugin(BasePlugin):
         await donald.stop()
         if donald.queue:
             await donald.queue.stop()
+
+    def on_error(self, fn: T) -> T:
+        """Register an error handler."""
+        self.__exc_handler = fn
+        return fn
+
+    def submit(self, task: t.Callable, *args, **kwargs):
+        """Submit a task to donald."""
+        if self.cfg.queue:
+            return self.donald.queue.submit(task, *args, **kwargs)
+
+        return self.donald.submit(task, *args, **kwargs)
