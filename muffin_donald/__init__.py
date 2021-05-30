@@ -64,7 +64,7 @@ class Plugin(BasePlugin):
         """Startup self tasks manager."""
         donald = t.cast(Donald, self.donald)
         started = await donald.start() if self.cfg.autostart else False
-        if donald.queue:
+        if self.cfg.queue:
             await donald.queue.connect()
             if started:
                 await donald.queue.start()
