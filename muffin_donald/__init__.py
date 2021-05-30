@@ -34,12 +34,12 @@ class Plugin(BasePlugin):
         "queue_name": 'tasks',
     }
 
+    donald: Donald = None
     __exc_handler: t.Optional[t.Callable] = None
 
     def __init__(self, *args, **kwargs):
         """Initialize the plugin."""
         self.donald: Donald = None
-        self.schedules = []
         super(Plugin, self).__init__(*args, **kwargs)
 
     def setup(self, app: Application, **options):
@@ -69,14 +69,7 @@ class Plugin(BasePlugin):
     async def startup(self):
         """Startup self tasks manager."""
         donald = t.cast(Donald, self.donald)
-
-        started = False
-        if self.cfg.autostart:
-            for interval, task in self.schedules:
-                donald.schedule(interval)(task)
-
-            started = await donald.start()
-
+        started = await donald.start() if self.cfg.autostart else False
         if donald.queue:
             await donald.queue.connect()
             if started:
