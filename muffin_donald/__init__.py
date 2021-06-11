@@ -1,6 +1,8 @@
 """Support session with Muffin framework."""
 
 import typing as t
+import asyncio
+import signal
 
 from donald import Donald
 from muffin import Application
@@ -62,12 +64,8 @@ class Plugin(BasePlugin):
 
     async def startup(self):
         """Startup self tasks manager."""
-        donald = t.cast(Donald, self.donald)
-        started = await donald.start() if self.cfg.autostart else False
-        if self.cfg.queue:
-            await donald.queue.connect()
-            if started:
-                await donald.queue.start()
+        if self.cfg.autostart:
+            await self.start()
 
     async def shutdown(self):
         """Shutdown self tasks manager."""
@@ -87,3 +85,34 @@ class Plugin(BasePlugin):
             return self.donald.queue.submit(task, *args, **kwargs)
 
         return self.donald.submit(task, *args, **kwargs)
+
+    async def start(self):
+        """Start donald."""
+        donald = t.cast(Donald, self.donald)
+        started = await donald.start()
+        if self.cfg.queue:
+            await donald.queue.connect()
+            if started:
+                await donald.queue.start()
+
+        return started
+
+    async def run(self):
+        """Run tasks manager continiously."""
+        loop = asyncio.get_event_loop()
+
+        if await self.start():
+            donald = t.cast(Donald, self.donald)
+            runner = asyncio.create_task(donald.run())
+
+            async def stop():
+                await self.shutdown()
+                runner.cancel()
+
+            loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(stop()))
+            loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(stop()))
+
+            try:
+                await runner
+            except asyncio.CancelledError:
+                pass
