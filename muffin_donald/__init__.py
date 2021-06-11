@@ -57,7 +57,7 @@ class Plugin(BasePlugin):
             num_workers=self.cfg.num_workers,
             queue_name=self.cfg.queue_name,
             queue_params=self.cfg.queue_params,
-            sentry_dsn=sentry and sentry.cfg.dsn,
+            sentry=sentry and sentry.cfg.dsn and dict(sentry.cfg.sdk_options, dsn=sentry.cfg.dsn),
         )
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
