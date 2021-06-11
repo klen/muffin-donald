@@ -29,6 +29,7 @@ class Plugin(BasePlugin):
         "fake_mode": Donald.defaults['fake_mode'],
         "num_workers": Donald.defaults['num_workers'],
         "max_tasks_per_worker": Donald.defaults['max_tasks_per_worker'],
+        #  "workers_lifespan": False,
         "filelock": Donald.defaults['filelock'],
         "loglevel": Donald.defaults['loglevel'],
         "queue": False,
@@ -47,6 +48,8 @@ class Plugin(BasePlugin):
     def setup(self, app: Application, **options):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
+
+        sentry = self.app.plugins.get('sentry')
         self.donald = Donald(
             fake_mode=self.cfg.fake_mode,
             filelock=self.cfg.filelock,
@@ -54,6 +57,7 @@ class Plugin(BasePlugin):
             num_workers=self.cfg.num_workers,
             queue_name=self.cfg.queue_name,
             queue_params=self.cfg.queue_params,
+            sentry_dsn=sentry and sentry.cfg.dsn,
         )
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
@@ -89,12 +93,15 @@ class Plugin(BasePlugin):
     async def start(self):
         """Start donald."""
         donald = t.cast(Donald, self.donald)
+        #  if self.cfg.workers_lifespan:
+        #      donald.on_start(self.app.lifespan.run, 'startup')
+        #      donald.on_stop(self.app.lifespan.run, 'shutdown')
+
         started = await donald.start()
         if self.cfg.queue:
             await donald.queue.connect()
             if started:
                 await donald.queue.start()
-
         return started
 
     async def run(self):
