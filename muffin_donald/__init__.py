@@ -104,13 +104,13 @@ class Plugin(BasePlugin):
                 await donald.queue.start()
         return started
 
-    async def run(self):
+    async def run(self, timer:int = 60):
         """Run tasks manager continiously."""
         loop = asyncio.get_event_loop()
 
         if await self.start():
             donald = t.cast(Donald, self.donald)
-            runner = asyncio.create_task(donald.run())
+            runner = asyncio.create_task(donald.run(timer))
 
             async def stop():
                 await self.shutdown()
