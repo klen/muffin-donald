@@ -40,6 +40,6 @@ async def test_base(app, capsys):
         await asyncio.sleep(.2)
 
     captured = capsys.readouterr()
-    assert "Next ping" in captured.err
+    assert "Next 'ping'" in captured.err
 
     assert not tasks.donald._started
