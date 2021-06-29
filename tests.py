@@ -22,7 +22,7 @@ async def ping():
     print("PONG")
 
 
-async def test_base(app, capsys):
+async def test_start(app, capsys):
     from muffin_donald import Plugin
 
     tasks = Plugin(app, autostart=True, num_workers=2)
@@ -43,3 +43,11 @@ async def test_base(app, capsys):
     assert "Next 'ping'" in captured.err
 
     assert not tasks.donald._started
+
+
+async def test_connect(app):
+    from muffin_donald import Plugin
+
+    tasks = Plugin(app, queue=True, num_workers=2)
+    async with manage_lifespan(app):
+        assert tasks.donald.queue._connected

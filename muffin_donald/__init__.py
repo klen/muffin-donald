@@ -71,6 +71,10 @@ class Plugin(BasePlugin):
         if self.cfg.autostart:
             await self.start()
 
+        elif self.cfg.queue:
+            donald = t.cast(Donald, self.donald)
+            await donald.queue.connect()
+
     async def shutdown(self):
         """Shutdown self tasks manager."""
         donald = t.cast(Donald, self.donald)
@@ -104,7 +108,7 @@ class Plugin(BasePlugin):
                 await donald.queue.start()
         return started
 
-    async def run(self, timer:int = 60):
+    async def run(self, timer: int = 60):
         """Run tasks manager continiously."""
         loop = asyncio.get_event_loop()
 
