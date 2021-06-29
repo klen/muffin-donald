@@ -17,6 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.8, 3.9]
+    services:
+      rmq:
+        image: rabbitmq
+        ports: ["5672:5672"]
 
     steps:
     - name: Checkout changes
