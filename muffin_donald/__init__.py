@@ -49,7 +49,8 @@ class Plugin(BasePlugin):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
-        sentry = self.app.plugins.get('sentry')
+        sentry = app.plugins.get('sentry')
+
         self.donald = Donald(
             fake_mode=self.cfg.fake_mode,
             filelock=self.cfg.filelock,
@@ -93,6 +94,13 @@ class Plugin(BasePlugin):
             return self.donald.queue.submit(task, *args, **kwargs)
 
         return self.donald.submit(task, *args, **kwargs)
+
+    def submit_nowait(self, task: t.Callable, *args, **kwargs):
+        """Submit a task to donald."""
+        if self.cfg.queue:
+            self.donald.queue.submit(task, *args, **kwargs)
+
+        self.donald.submit_nowait(task, *args, **kwargs)
 
     async def start(self):
         """Start donald."""
