@@ -65,9 +65,9 @@ class Plugin(BasePlugin):
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
 
-        def task_worker(timer: int = 60):
+        async def task_worker(timer: int = 60):
             """Run tasks workers."""
-            self.run(timer)
+            await self.run(timer)
 
         app.manage(task_worker)
 
