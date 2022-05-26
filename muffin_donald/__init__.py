@@ -1,13 +1,13 @@
 """Support session with Muffin framework."""
 
-import typing as t
 import asyncio
 import signal
+import typing as t
 
-from donald import Donald
 from muffin import Application
 from muffin.plugins import BasePlugin
 
+from donald import Donald
 
 __version__ = "0.4.0"
 __project__ = "muffin-donald"
@@ -15,7 +15,7 @@ __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
 
 
-T = t.TypeVar('T', bound=t.Callable)
+T = t.TypeVar("T", bound=t.Callable)
 
 
 class Plugin(BasePlugin):
@@ -23,17 +23,17 @@ class Plugin(BasePlugin):
     """Run periodic tasks."""
 
     # Can be customized on setup
-    name = 'tasks'
+    name = "tasks"
     defaults: t.Dict = {
         "autostart": True,
-        "fake_mode": Donald.defaults['fake_mode'],
-        "num_workers": Donald.defaults['num_workers'],
-        "max_tasks_per_worker": Donald.defaults['max_tasks_per_worker'],
+        "fake_mode": Donald.defaults["fake_mode"],
+        "num_workers": Donald.defaults["num_workers"],
+        "max_tasks_per_worker": Donald.defaults["max_tasks_per_worker"],
         #  "workers_lifespan": False,
-        "filelock": Donald.defaults['filelock'],
-        "loglevel": Donald.defaults['loglevel'],
+        "filelock": Donald.defaults["filelock"],
+        "loglevel": Donald.defaults["loglevel"],
         "queue": False,
-        "queue_name": 'tasks',
+        "queue_name": "tasks",
         "queue_params": {},
     }
 
@@ -49,7 +49,7 @@ class Plugin(BasePlugin):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
-        sentry = app.plugins.get('sentry')
+        sentry = app.plugins.get("sentry")
 
         self.donald = Donald(
             fake_mode=self.cfg.fake_mode,
@@ -58,10 +58,18 @@ class Plugin(BasePlugin):
             num_workers=self.cfg.num_workers,
             queue_name=self.cfg.queue_name,
             queue_params=self.cfg.queue_params,
-            sentry=sentry and sentry.cfg.dsn and dict(sentry.cfg.sdk_options, dsn=sentry.cfg.dsn),
+            sentry=sentry
+            and sentry.cfg.dsn
+            and dict(sentry.cfg.sdk_options, dsn=sentry.cfg.dsn),
         )
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
+
+        def task_worker(timer: int = 60):
+            """Run tasks workers."""
+            self.run(timer)
+
+        app.manage(task_worker)
 
     def __getattr__(self, name):
         """Proxy attributes to the tasks manager."""

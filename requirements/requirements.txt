@@ -1,0 +1,2 @@
+muffin  >= 0.71
+donald  >= 0.12
