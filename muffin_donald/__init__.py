@@ -65,11 +65,13 @@ class Plugin(BasePlugin):
         if self.__exc_handler:
             self.donald.on_exception(self.__exc_handler)
 
-        async def task_worker(timer: int = 60):
-            """Run tasks workers."""
+        async def tasks_manager(timer: int = 60):
+            """Run tasks workers.
+            :param timer: Sleep timer for scheduled tasks.
+            """
             await self.run(timer)
 
-        app.manage(task_worker)
+        app.manage(tasks_manager)
 
     def __getattr__(self, name):
         """Proxy attributes to the tasks manager."""
