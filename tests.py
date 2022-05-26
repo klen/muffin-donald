@@ -1,12 +1,14 @@
-import muffin
 import asyncio
+from pathlib import Path
+
+import muffin
 import pytest
 from asgi_tools.tests import manage_lifespan
 
 
 @pytest.fixture
 def aiolib():
-    return ('asyncio', {'use_uvloop': False})
+    return ("asyncio", {"use_uvloop": False})
 
 
 @pytest.fixture
@@ -19,10 +21,12 @@ async def task1():
 
 
 async def ping():
+    with open(Path(__file__).parent / "ping", "w") as f:
+        f.write("PONG")
     print("PONG")
 
 
-async def test_start(app, capsys):
+async def test_start(app):
     from muffin_donald import Plugin
 
     tasks = Plugin(app, autostart=True, num_workers=2)
@@ -37,10 +41,10 @@ async def test_start(app, capsys):
         assert len(tasks.donald.workers) == 2
         res = await tasks.submit(task1)
         assert res == 42
-        await asyncio.sleep(.2)
+        await asyncio.sleep(3e-1)
 
-    captured = capsys.readouterr()
-    assert "Next 'ping'" in captured.err
+    with open(Path(__file__).parent / "ping", "r") as f:
+        assert f.read() == "PONG"
 
     assert not tasks.donald._started
 
