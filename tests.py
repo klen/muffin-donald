@@ -54,4 +54,5 @@ async def test_connect(app):
 
     tasks = Plugin(app, queue=True, num_workers=2)
     async with manage_lifespan(app):
+        await asyncio.sleep(3e-1)
         assert tasks.donald.queue._connected
