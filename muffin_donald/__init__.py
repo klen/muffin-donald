@@ -1,9 +1,11 @@
 """Support session with Muffin framework."""
 
 import asyncio
+import datetime
 import signal
 import typing as t
 
+from crontab import CronTab
 from muffin import Application
 from muffin.plugins import BasePlugin
 
@@ -26,6 +28,7 @@ class Plugin(BasePlugin):
     name = "tasks"
     defaults: t.Dict = {
         "autostart": True,
+        "scheduler": True,
         "fake_mode": Donald.defaults["fake_mode"],
         "num_workers": Donald.defaults["num_workers"],
         "max_tasks_per_worker": Donald.defaults["max_tasks_per_worker"],
@@ -73,10 +76,6 @@ class Plugin(BasePlugin):
 
         app.manage(tasks_manager)
 
-    def __getattr__(self, name):
-        """Proxy attributes to the tasks manager."""
-        return getattr(self.donald, name)
-
     async def startup(self):
         """Startup self tasks manager."""
         if self.cfg.autostart:
@@ -97,6 +96,21 @@ class Plugin(BasePlugin):
         """Register an error handler."""
         self.__exc_handler = fn
         return fn
+
+    def __getattr__(self, name):
+        """Proxy attributes to the tasks manager."""
+        return getattr(self.donald, name)
+
+    def schedule(
+        self,
+        interval: t.Union[int, float, datetime.timedelta, CronTab],
+        *args,
+        **kwargs
+    ):
+        """Schedule the given function."""
+        if self.cfg.scheduler:
+            return self.donald.schedule(interval, *args, **kwargs)
+        return lambda f: f
 
     def submit(self, task: t.Callable, *args, **kwargs):
         """Submit a task to donald."""
