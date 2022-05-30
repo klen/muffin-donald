@@ -11,7 +11,7 @@ from muffin.plugins import BasePlugin
 
 from donald import Donald
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __project__ = "muffin-donald"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
