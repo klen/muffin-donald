@@ -34,6 +34,7 @@ class Plugin(BasePlugin):
         "max_tasks_per_worker": Donald.defaults["max_tasks_per_worker"],
         #  "workers_lifespan": False,
         "filelock": Donald.defaults["filelock"],
+        "logconfig": Donald.defaults["logconfig"],
         "loglevel": Donald.defaults["loglevel"],
         "queue": False,
         "queue_name": "tasks",
