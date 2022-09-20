@@ -70,15 +70,14 @@ Options
 =========================== =========================== =========================== 
 Name                        Default value               Desctiption
 --------------------------- --------------------------- ---------------------------
-**autostart**               ``True``                    Auto start tasks workers
-**fake_mode**               ``False``                   Run tasks immediately (testing)
-**num_workers**             ``<CPU_COUNT> - 1``         Number of workers
-**max_tasks_per_worker**    ``100``                     Maximum concurent tasks per worker
-**filelock**                ``None``                    File lock path
-**loglevel**                ``INFO``                    Logger Level
-**queue_exchange**          ``tasks``                   Tasks queue exchange
-**queue_name**              ``tasks``                   Tasks queue name
-**queue_params**            ``{}``                      Queue params
+**log_level**               ``INFO``                    Logger Level
+**log_config**              ``None``                    Logger config
+**backend**                 ``'memory'``                Backend name (memory, redis, amqp)
+**backend_params**          ``{}``                      Backend params
+**worker_params**           ``{}``                      Worker params
+**worker_lifespan**         ``False``                   Fun the application lifespan events with worker
+**start_worker**            ``False``                   Auto start a worker in the current process
+**start_scheduler**         ``False``                   Auto start a scheduler in the current process
 =========================== =========================== =========================== 
 
 
@@ -86,14 +85,14 @@ You are able to provide the options when you are initiliazing the plugin:
 
 .. code-block:: python
 
-    donald.setup(app, num_workers=2)
+    donald.setup(app, start_worker=True)
 
 
-Or setup it inside ``Muffin.Application`` config using the ``DONALD_`` prefix:
+Or setup it inside ``Muffin.Application`` config using the ``TASKS_`` prefix:
 
 .. code-block:: python
 
-   DONALD_ROOT_URL = 'https://api.github.com'
+   TASKS_START_WORKER = True
 
 ``Muffin.Application`` configuration options are case insensitive
 
