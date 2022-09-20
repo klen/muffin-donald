@@ -42,7 +42,7 @@ class Plugin(BasePlugin):
     donald: Donald
     worker: Worker
 
-    def setup(self, app: Application, **options):
+    def setup(self, app: Application, **options):  # noqa
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
@@ -63,7 +63,7 @@ class Plugin(BasePlugin):
             await self.manager.scheduler.wait()
 
         @app.manage(lifespan=True)
-        async def tasks_worker():
+        async def tasks_worker(scheduler=False):
             """Run tasks worker."""
             # Auto setup Sentry
             worker_params = self.manager._params["worker_params"]
@@ -83,6 +83,9 @@ class Plugin(BasePlugin):
             if self.worker is None:
                 self.worker = self.manager.create_worker(show_banner=True)
                 self.worker.start()
+
+            if scheduler:
+                self.manager.scheduler.start()
 
             await self.worker.wait()
 
