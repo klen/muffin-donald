@@ -80,9 +80,8 @@ class Plugin(BasePlugin):
                 if not worker_params.get("on_stop"):
                     self.on_stop(partial(app.lifespan.run, "shutdown"))
 
-            if self.worker is None:
-                self.worker = self.manager.create_worker(show_banner=True)
-                self.worker.start()
+            self.worker = self.manager.create_worker(show_banner=True)
+            self.worker.start()
 
             if scheduler:
                 self.manager.scheduler.start()
