@@ -1,15 +1,13 @@
 """Support session with Muffin framework."""
 
-import asyncio
-import datetime
-import signal
 import typing as t
+from functools import partial
 
-from crontab import CronTab
 from muffin import Application
 from muffin.plugins import BasePlugin
 
-from donald import Donald
+from donald import Donald, logger
+from donald.worker import Worker
 
 __version__ = "0.6.0"
 __project__ = "muffin-donald"
@@ -18,6 +16,7 @@ __license__ = "MIT"
 
 
 T = t.TypeVar("T", bound=t.Callable)
+assert logger
 
 
 class Plugin(BasePlugin):
@@ -27,136 +26,118 @@ class Plugin(BasePlugin):
     # Can be customized on setup
     name = "tasks"
     defaults: t.Dict = {
-        "autostart": True,
-        "scheduler": True,
-        "fake_mode": Donald.defaults["fake_mode"],
-        "num_workers": Donald.defaults["num_workers"],
-        "max_tasks_per_worker": Donald.defaults["max_tasks_per_worker"],
-        #  "workers_lifespan": False,
-        "filelock": Donald.defaults["filelock"],
-        "logconfig": Donald.defaults["logconfig"],
-        "loglevel": Donald.defaults["loglevel"],
-        "queue": False,
-        "queue_name": "tasks",
-        "queue_params": {},
+        # Donald options
+        "log_level": Donald.defaults["log_level"],
+        "log_config": Donald.defaults["log_config"],
+        "backend": Donald.defaults["backend"],
+        "backend_params": Donald.defaults["backend_params"],
+        "worker_params": Donald.defaults["worker_params"],
+        # Muffin-donald specific options
+        "worker_lifespan": False,
+        "start_worker": False,
+        "start_scheduler": False,
+        "filelock": None,
     }
 
-    donald: Donald = None
-    __exc_handler: t.Optional[t.Callable] = None
-
-    def __init__(self, *args, **kwargs):
-        """Initialize the plugin."""
-        self.donald: Donald = None
-        super(Plugin, self).__init__(*args, **kwargs)
+    donald: Donald
+    worker: Worker
 
     def setup(self, app: Application, **options):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
-        sentry = app.plugins.get("sentry")
-
-        self.donald = Donald(
-            fake_mode=self.cfg.fake_mode,
-            filelock=self.cfg.filelock,
-            loglevel=self.cfg.loglevel,
-            num_workers=self.cfg.num_workers,
-            queue_name=self.cfg.queue_name,
-            queue_params=self.cfg.queue_params,
-            sentry=sentry
-            and sentry.cfg.dsn
-            and dict(sentry.cfg.sdk_options, dsn=sentry.cfg.dsn),
+        self.manager = Donald(
+            log_level=self.cfg.log_level,
+            log_config=self.cfg.log_config,
+            backend=self.cfg.backend,
+            backend_params=self.cfg.backend_params,
+            worker_params=self.cfg.worker_params,
         )
-        if self.__exc_handler:
-            self.donald.on_exception(self.__exc_handler)
 
-        async def tasks_manager(timer: int = 60):
-            """Run tasks workers.
-            :param timer: Sleep timer for scheduled tasks.
-            """
-            await self.run(timer)
+        @app.manage(lifespan=True)
+        async def tasks_scheduler():
+            """Run tasks scheduler."""
+            if not self.cfg.start_scheduler:
+                await self.manager.scheduler.start()
 
-        app.manage(tasks_manager)
+            await self.manager.scheduler.wait()
+
+        @app.manage(lifespan=True)
+        async def tasks_worker():
+            """Run tasks worker."""
+            # Auto setup Sentry
+            worker_params = self.manager._params["worker_params"]
+            if not worker_params.get("on_error"):
+                sentry = app.plugins.get("sentry")
+                if sentry:
+                    self.on_error(sentry.captureException)
+
+            # Setup on_start/on_stop
+            if self.cfg.worker_lifespan:
+                if not worker_params.get("on_start"):
+                    self.on_start(partial(app.lifespan.run, "startup"))
+
+                if not worker_params.get("on_stop"):
+                    self.on_stop(partial(app.lifespan.run, "shutdown"))
+
+            if self.worker is None:
+                self.worker = self.manager.create_worker(show_banner=True)
+                self.worker.start()
+
+            await self.worker.wait()
 
     async def startup(self):
         """Startup self tasks manager."""
-        if self.cfg.autostart:
-            await self.start()
 
-        elif self.cfg.queue:
-            donald = t.cast(Donald, self.donald)
-            await donald.queue.connect()
+        manager = self.manager
+        worker_params = manager._params["worker_params"]
+
+        # Auto setup Sentry
+        if not worker_params.get("on_error"):
+            sentry = self.app.plugins.get("sentry")
+            if sentry:
+                self.on_error(sentry.captureException)
+
+        if not (worker_params.get("on_start") and worker_params.get("on_stop")):
+            pass
+
+        await manager.start()
+
+        if self.cfg.start_worker:
+            self.worker = manager.create_worker()
+            self.worker.start()
+
+        if self.cfg.start_scheduler:
+            manager.scheduler.start()
 
     async def shutdown(self):
         """Shutdown self tasks manager."""
-        donald = t.cast(Donald, self.donald)
-        await donald.stop()
-        if donald.queue:
-            await donald.queue.stop()
+        manager = self.manager
+        if self.worker is not None:
+            await self.worker.stop()
+
+        await manager.scheduler.stop()
+        await manager.stop()
+
+    def task(self, *args, **kwargs):
+        """Register a task."""
+        return self.manager.task(*args, **kwargs)
+
+    def schedule(self, *args, **kwargs):
+        """Schedule a task."""
+        return self.manager.schedule(*args, **kwargs)
 
     def on_error(self, fn: T) -> T:
         """Register an error handler."""
-        self.__exc_handler = fn
+        self.manager.on_error(fn)
         return fn
 
-    def __getattr__(self, name):
-        """Proxy attributes to the tasks manager."""
-        return getattr(self.donald, name)
+    def on_start(self, fn: T) -> T:
+        """Register an error handler."""
+        self.manager.on_start(fn)
+        return fn
 
-    def schedule(
-        self,
-        interval: t.Union[int, float, datetime.timedelta, CronTab],
-        *args,
-        **kwargs
-    ):
-        """Schedule the given function."""
-        if self.cfg.scheduler:
-            return self.donald.schedule(interval, *args, **kwargs)
-        return lambda f: f
-
-    def submit(self, task: t.Callable, *args, **kwargs):
-        """Submit a task to donald."""
-        if self.cfg.queue:
-            return self.donald.queue.submit(task, *args, **kwargs)
-
-        return self.donald.submit(task, *args, **kwargs)
-
-    def submit_nowait(self, task: t.Callable, *args, **kwargs):
-        """Submit a task to donald."""
-        if self.cfg.queue:
-            self.donald.queue.submit(task, *args, **kwargs)
-
-        self.donald.submit_nowait(task, *args, **kwargs)
-
-    async def start(self):
-        """Start donald."""
-        donald = t.cast(Donald, self.donald)
-        #  if self.cfg.workers_lifespan:
-        #      donald.on_start(self.app.lifespan.run, 'startup')
-        #      donald.on_stop(self.app.lifespan.run, 'shutdown')
-
-        started = await donald.start()
-        if self.cfg.queue:
-            await donald.queue.connect()
-            if started:
-                await donald.queue.start()
-        return started
-
-    async def run(self, timer: int = 60):
-        """Run tasks manager continiously."""
-        loop = asyncio.get_event_loop()
-
-        if await self.start():
-            donald = t.cast(Donald, self.donald)
-            runner = asyncio.create_task(donald.run(timer))
-
-            async def stop():
-                await self.shutdown()
-                runner.cancel()
-
-            loop.add_signal_handler(signal.SIGINT, lambda: asyncio.create_task(stop()))
-            loop.add_signal_handler(signal.SIGTERM, lambda: asyncio.create_task(stop()))
-
-            try:
-                await runner
-            except asyncio.CancelledError:
-                pass
+    def on_stop(self, fn: T) -> T:
+        """Register an error handler."""
+        self.manager.on_stop(fn)
+        return fn

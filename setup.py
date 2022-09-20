@@ -4,11 +4,12 @@
 # ------------------
 
 import pathlib
+from typing import List
 
 import pkg_resources
 
 
-def parse_requirements(path: str) -> "list[str]":
+def parse_requirements(path: str) -> List[str]:
     with pathlib.Path(path).open() as requirements:
         return [str(req) for req in pkg_resources.parse_requirements(requirements)]
 
@@ -16,7 +17,7 @@ def parse_requirements(path: str) -> "list[str]":
 # Setup package
 # -------------
 
-from setuptools import setup
+from setuptools import setup  # noqa
 
 setup(
     install_requires=parse_requirements("requirements/requirements.txt"),

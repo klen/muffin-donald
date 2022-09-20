@@ -5,54 +5,52 @@ import muffin
 import pytest
 from asgi_tools.tests import manage_lifespan
 
+from muffin_donald import Plugin, logger
+
 
 @pytest.fixture
 def aiolib():
     return ("asyncio", {"use_uvloop": False})
 
 
-@pytest.fixture
-def app():
-    return muffin.Application(DEBUG=True)
+app = muffin.Application(DEBUG=True)
+tasks = Plugin(app, start_worker=True, start_scheduler=True)
 
 
+@tasks.task
 async def task1():
+    logger.info("Task1: done")
     return 42
 
 
+@tasks.schedule(2e-1)
+@tasks.task
 async def ping():
     with open(Path(__file__).parent / "ping", "w") as f:
         f.write("PONG")
-    print("PONG")
+    logger.info("Ping: done")
 
 
-async def test_start(app):
-    from muffin_donald import Plugin
+def test_base():
+    assert "tasks_worker" in app.manage.commands
+    assert "tasks_scheduler" in app.manage.commands
 
-    tasks = Plugin(app, autostart=True, num_workers=2)
+
+async def test_start(caplog):
     assert tasks
-    assert tasks.donald
-
-    tasks.schedule(2e-1)(ping)
+    assert tasks.manager
 
     async with manage_lifespan(app):
-        assert tasks.donald._started
-        assert tasks.donald.schedules
-        assert len(tasks.donald.workers) == 2
-        res = await tasks.submit(task1)
-        assert res == 42
+        assert tasks.manager.is_started
+        assert tasks.manager._backend.is_connected
+        assert tasks.manager.scheduler._tasks
+        await task1.submit()
         await asyncio.sleep(3e-1)
 
     with open(Path(__file__).parent / "ping", "r") as f:
         assert f.read() == "PONG"
 
-    assert not tasks.donald._started
-
-
-async def test_connect(app):
-    from muffin_donald import Plugin
-
-    tasks = Plugin(app, queue=True, num_workers=2)
-    async with manage_lifespan(app):
-        await asyncio.sleep(3e-1)
-        assert tasks.donald.queue._connected
+    assert not tasks.manager.is_started
+    log_messages = [r.message for r in caplog.records]
+    assert "Task1: done" in log_messages
+    assert "Ping: done" in log_messages
