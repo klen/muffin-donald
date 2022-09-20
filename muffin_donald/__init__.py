@@ -33,7 +33,6 @@ class Plugin(BasePlugin):
         "backend_params": Donald.defaults["backend_params"],
         "worker_params": Donald.defaults["worker_params"],
         # Muffin-donald specific options
-        "worker_lifespan": False,
         "start_worker": False,
         "start_scheduler": False,
         "filelock": None,
@@ -72,21 +71,13 @@ class Plugin(BasePlugin):
                 if sentry:
                     self.on_error(sentry.captureException)
 
-            # Setup on_start/on_stop
-            if self.cfg.worker_lifespan:
-                if not worker_params.get("on_start"):
-                    self.on_start(partial(app.lifespan.run, "startup"))
-
-                if not worker_params.get("on_stop"):
-                    self.on_stop(partial(app.lifespan.run, "shutdown"))
-
-            self.worker = self.manager.create_worker(show_banner=True)
-            self.worker.start()
+            worker = self.manager.create_worker(show_banner=True)
+            worker.start()
 
             if scheduler:
                 self.manager.scheduler.start()
 
-            await self.worker.wait()
+            await worker.wait()
 
     async def startup(self):
         """Startup self tasks manager."""
@@ -99,9 +90,6 @@ class Plugin(BasePlugin):
             sentry = self.app.plugins.get("sentry")
             if sentry:
                 self.on_error(sentry.captureException)
-
-        if not (worker_params.get("on_start") and worker_params.get("on_stop")):
-            pass
 
         await manager.start()
 
