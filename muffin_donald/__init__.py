@@ -57,7 +57,7 @@ class Plugin(BasePlugin):
         async def tasks_scheduler():
             """Run tasks scheduler."""
             if not self.cfg.start_scheduler:
-                await self.manager.scheduler.start()
+                self.manager.scheduler.start()
 
             await self.manager.scheduler.wait()
 
