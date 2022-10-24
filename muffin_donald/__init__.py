@@ -1,7 +1,6 @@
 """Support session with Muffin framework."""
 
 import typing as t
-from functools import partial
 
 from muffin import Application
 from muffin.plugins import BasePlugin
@@ -38,8 +37,8 @@ class Plugin(BasePlugin):
         "filelock": None,
     }
 
-    donald: Donald
     worker: Worker
+    manager: Donald
 
     def setup(self, app: Application, **options):  # noqa
         """Setup Donald tasks manager."""
@@ -106,7 +105,8 @@ class Plugin(BasePlugin):
         if self.worker is not None:
             await self.worker.stop()
 
-        await manager.scheduler.stop()
+        if self.cfg.start_scheduler:
+            await manager.scheduler.stop()
         await manager.stop()
 
     def task(self, *args, **kwargs):
