@@ -37,8 +37,8 @@ class Plugin(BasePlugin):
         "filelock": None,
     }
 
-    worker: Worker
     manager: Donald
+    worker: Worker = None
 
     def setup(self, app: Application, **options):  # noqa
         """Setup Donald tasks manager."""
