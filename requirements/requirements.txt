@@ -1,2 +1,2 @@
 muffin  >= 0.71
-donald  >= 0.31.6
+donald  >= 0.31.7
