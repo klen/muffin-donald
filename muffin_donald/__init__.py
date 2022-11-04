@@ -8,7 +8,7 @@ from muffin.plugins import BasePlugin
 from donald import Donald, logger
 from donald.worker import Worker
 
-__version__ = "0.8.6"
+__version__ = "0.8.7"
 __project__ = "muffin-donald"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
