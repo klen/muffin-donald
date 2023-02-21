@@ -32,8 +32,8 @@ async def ping():
 
 
 def test_base():
-    assert "tasks_worker" in app.manage.commands
-    assert "tasks_scheduler" in app.manage.commands
+    assert "tasks-worker" in app.manage.commands
+    assert "tasks-scheduler" in app.manage.commands
 
 
 async def test_start(caplog):

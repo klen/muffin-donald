@@ -1,11 +1,10 @@
 """Support session with Muffin framework."""
 
-import typing as t
-
 from muffin import Application
 from muffin.plugins import BasePlugin
 
 from donald import Donald, logger
+from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
 from donald.worker import Worker
 
 __version__ = "0.8.7"
@@ -14,7 +13,6 @@ __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
 
 
-T = t.TypeVar("T", bound=t.Callable)
 assert logger
 
 
@@ -24,7 +22,7 @@ class Plugin(BasePlugin):
 
     # Can be customized on setup
     name = "tasks"
-    defaults: t.Dict = {
+    defaults = {
         # Donald options
         "log_level": Donald.defaults["log_level"],
         "log_config": Donald.defaults["log_config"],
@@ -113,21 +111,21 @@ class Plugin(BasePlugin):
         """Register a task."""
         return self.manager.task(*args, **kwargs)
 
-    def schedule(self, *args, **kwargs):
+    def schedule(self, interval: TInterval):
         """Schedule a task."""
-        return self.manager.schedule(*args, **kwargs)
+        return self.manager.schedule(interval)
 
-    def on_error(self, fn: T) -> T:
+    def on_error(self, fn: TVWorkerOnErrFn) -> TVWorkerOnErrFn:
         """Register an error handler."""
         self.manager.on_error(fn)
         return fn
 
-    def on_start(self, fn: T) -> T:
+    def on_start(self, fn: TVWorkerOnFn) -> TVWorkerOnFn:
         """Register an error handler."""
         self.manager.on_start(fn)
         return fn
 
-    def on_stop(self, fn: T) -> T:
+    def on_stop(self, fn: TVWorkerOnFn) -> TVWorkerOnFn:
         """Register an error handler."""
         self.manager.on_stop(fn)
         return fn
