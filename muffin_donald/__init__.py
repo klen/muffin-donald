@@ -66,7 +66,11 @@ class Plugin(BasePlugin):
             if not worker_params.get("on_error"):
                 sentry = app.plugins.get("sentry")
                 if sentry:
-                    self.on_error(sentry.captureException)
+
+                    async def on_error(exc):
+                        sentry.captureException(exc)
+
+                    self.on_error(on_error)
 
             worker = self.manager.create_worker(show_banner=True)
             worker.start()
