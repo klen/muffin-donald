@@ -7,7 +7,7 @@ from donald import Donald, logger
 from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
 from donald.worker import Worker
 
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 __project__ = "muffin-donald"
 __author__ = "Kirill Klenov <horneds@gmail.com>"
 __license__ = "MIT"
