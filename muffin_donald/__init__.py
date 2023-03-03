@@ -1,5 +1,7 @@
 """Support session with Muffin framework."""
 
+from inspect import iscoroutinefunction
+
 from muffin import Application
 from muffin.plugins import BasePlugin
 
@@ -62,15 +64,7 @@ class Plugin(BasePlugin):
         async def tasks_worker(scheduler=False):
             """Run tasks worker."""
             # Auto setup Sentry
-            worker_params = self.manager._params["worker_params"]
-            if not worker_params.get("on_error"):
-                sentry = app.plugins.get("sentry")
-                if sentry:
-
-                    async def on_error(exc):
-                        sentry.captureException(exc)
-
-                    self.on_error(on_error)
+            setup_on_error(self)
 
             worker = self.manager.create_worker(show_banner=True)
             worker.start()
@@ -83,15 +77,9 @@ class Plugin(BasePlugin):
     async def startup(self):
         """Startup self tasks manager."""
 
+        setup_on_error(self)
+
         manager = self.manager
-        worker_params = manager._params["worker_params"]
-
-        # Auto setup Sentry
-        if not worker_params.get("on_error"):
-            sentry = self.app.plugins.get("sentry")
-            if sentry:
-                self.on_error(sentry.captureException)
-
         await manager.start()
 
         if self.cfg.start_worker:
@@ -121,6 +109,7 @@ class Plugin(BasePlugin):
 
     def on_error(self, fn: TVWorkerOnErrFn) -> TVWorkerOnErrFn:
         """Register an error handler."""
+        assert iscoroutinefunction(fn)
         self.manager.on_error(fn)
         return fn
 
@@ -133,3 +122,19 @@ class Plugin(BasePlugin):
         """Register an error handler."""
         self.manager.on_stop(fn)
         return fn
+
+
+def setup_on_error(plugin: Plugin):
+    """Generate on_error handler for Donald."""
+    manager = plugin.manager
+    worker_params = manager._params["worker_params"]
+
+    # Auto setup Sentry
+    if not worker_params.get("on_error"):
+        sentry = plugin.app.plugins.get("sentry")
+        if sentry:
+
+            async def on_error(exc):
+                sentry.captureException(exc)
+
+            plugin.on_error(on_error)
