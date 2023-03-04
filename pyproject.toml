@@ -1,6 +1,6 @@
 [project]
 name = "muffin-donald"
-version = "0.10.0"
+version = "0.10.1"
 description = "It's a plugin for Muffin framework which provides support for external APIs"
 readme = "README.rst"
 requires-python = ">=3.8"
