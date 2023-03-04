@@ -127,10 +127,15 @@ def setup_on_error(plugin: Plugin):
 
     # Auto setup Sentry
     if not worker_params.get("on_error"):
-        sentry = plugin.app.plugins.get("sentry")
-        if sentry:
+        maybe_sentry = plugin.app.plugins.get("sentry")
+        if maybe_sentry:
+
+            from muffin_sentry import Plugin as Sentry
+
+            assert isinstance(maybe_sentry, Sentry)
+            sentry: Sentry = maybe_sentry
 
             async def on_error(exc):
-                sentry.captureException(exc)
+                sentry.capture_exception(exc)
 
             plugin.on_error(on_error)

@@ -37,7 +37,7 @@ tests = [
   "types-setuptools",
   "ruff",
 ]
-dev = ["pre-commit", "refurb", "bump2version"]
+dev = ["pre-commit", "refurb", "bump2version", "muffin_sentry"]
 
 [tool.setuptools]
 packages = ['muffin_donald']
