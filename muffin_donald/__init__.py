@@ -2,18 +2,11 @@
 
 from inspect import iscoroutinefunction
 
-from muffin import Application
-from muffin.plugins import BasePlugin
-
 from donald import Donald, logger
 from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
 from donald.worker import Worker
-
-__version__ = "0.9.2"
-__project__ = "muffin-donald"
-__author__ = "Kirill Klenov <horneds@gmail.com>"
-__license__ = "MIT"
-
+from muffin import Application
+from muffin.plugins import BasePlugin
 
 assert logger
 
@@ -40,7 +33,7 @@ class Plugin(BasePlugin):
     manager: Donald
     worker: Worker = None
 
-    def setup(self, app: Application, **options):  # noqa
+    def setup(self, app: Application, **options):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
@@ -61,7 +54,7 @@ class Plugin(BasePlugin):
             await self.manager.scheduler.wait()
 
         @app.manage(lifespan=True)
-        async def tasks_worker(scheduler=False):
+        async def tasks_worker(*, scheduler=False):
             """Run tasks worker."""
             # Auto setup Sentry
             setup_on_error(self)

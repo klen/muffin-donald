@@ -1,4 +1,0 @@
-pytest
-pytest-aio
-pytest-mypy
-types-setuptools
