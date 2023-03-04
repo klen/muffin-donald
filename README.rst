@@ -67,7 +67,7 @@ And etc
 Options
 -------
 
-=========================== =========================== =========================== 
+=========================== =========================== ===========================
 Name                        Default value               Desctiption
 --------------------------- --------------------------- ---------------------------
 **log_level**               ``INFO``                    Logger Level
@@ -78,7 +78,7 @@ Name                        Default value               Desctiption
 **worker_lifespan**         ``False``                   Fun the application lifespan events with worker
 **start_worker**            ``False``                   Auto start a worker in the current process
 **start_scheduler**         ``False``                   Auto start a scheduler in the current process
-=========================== =========================== =========================== 
+=========================== =========================== ===========================
 
 
 You are able to provide the options when you are initiliazing the plugin:

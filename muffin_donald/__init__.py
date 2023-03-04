@@ -1,12 +1,15 @@
 """Support session with Muffin framework."""
 
 from inspect import iscoroutinefunction
+from typing import TYPE_CHECKING
 
 from donald import Donald, logger
-from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
 from donald.worker import Worker
-from muffin import Application
 from muffin.plugins import BasePlugin
+
+if TYPE_CHECKING:
+    from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
+    from muffin import Application
 
 assert logger
 
@@ -33,7 +36,7 @@ class Plugin(BasePlugin):
     manager: Donald
     worker: Worker = None
 
-    def setup(self, app: Application, **options):
+    def setup(self, app: "Application", **options):
         """Setup Donald tasks manager."""
         super().setup(app, **options)
 
@@ -96,22 +99,22 @@ class Plugin(BasePlugin):
         """Register a task."""
         return self.manager.task(*args, **kwargs)
 
-    def schedule(self, interval: TInterval):
+    def schedule(self, interval: "TInterval"):
         """Schedule a task."""
         return self.manager.schedule(interval)
 
-    def on_error(self, fn: TVWorkerOnErrFn) -> TVWorkerOnErrFn:
+    def on_error(self, fn: "TVWorkerOnErrFn") -> "TVWorkerOnErrFn":
         """Register an error handler."""
         assert iscoroutinefunction(fn)
         self.manager.on_error(fn)
         return fn
 
-    def on_start(self, fn: TVWorkerOnFn) -> TVWorkerOnFn:
+    def on_start(self, fn: "TVWorkerOnFn") -> "TVWorkerOnFn":
         """Register an error handler."""
         self.manager.on_start(fn)
         return fn
 
-    def on_stop(self, fn: TVWorkerOnFn) -> TVWorkerOnFn:
+    def on_stop(self, fn: "TVWorkerOnFn") -> "TVWorkerOnFn":
         """Register an error handler."""
         self.manager.on_stop(fn)
         return fn
