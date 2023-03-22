@@ -1,7 +1,7 @@
 """Support session with Muffin framework."""
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from donald import Donald, logger
 from donald.worker import Worker
@@ -34,7 +34,7 @@ class Plugin(BasePlugin):
     }
 
     manager: Donald
-    worker: Worker = None
+    worker: Optional[Worker] = None
 
     def setup(self, app: "Application", **options):
         """Setup Donald tasks manager."""
