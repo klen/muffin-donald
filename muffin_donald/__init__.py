@@ -1,9 +1,9 @@
 """Support session with Muffin framework."""
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional, overload
 
-from donald import Donald, logger
+from donald import Donald, TaskWrapper, logger
 from donald.worker import Worker
 from muffin.plugins import BasePlugin
 
@@ -95,9 +95,18 @@ class Plugin(BasePlugin):
             await manager.scheduler.stop()
         await manager.stop()
 
-    def task(self, *args, **kwargs):
+    @overload
+    def task(self, fn: Callable) -> TaskWrapper:
+        ...
+
+    @overload
+    def task(self, **params) -> Callable[[Callable], TaskWrapper]:
+        ...
+
+    def task(self, fn: Optional[Callable] = None, **params):
+        """Decorator to wrap a function into a Task object."""
         """Register a task."""
-        return self.manager.task(*args, **kwargs)
+        return self.manager.task(fn=fn, **params)
 
     def schedule(self, interval: "TInterval"):
         """Schedule a task."""
