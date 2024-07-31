@@ -23,8 +23,9 @@ jobs:
         ports: ["5672:5672"]
 
     steps:
-    - nae: Sleep 2s to make rmq start
+    - name: Sleep 2s to make rmq start
       run: sleep 2
+
     - uses: actions/checkout@main
     - name: install poetry
       run: pipx install poetry
