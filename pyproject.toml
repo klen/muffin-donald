@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "muffin-donald"
-version = "0.10.4"
+version = "0.11.0"
 description = "It's a plugin for Muffin framework which provides support for external APIs"
 readme = "README.rst"
 license = "MIT"
