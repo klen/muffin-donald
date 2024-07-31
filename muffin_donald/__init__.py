@@ -1,14 +1,15 @@
 """Support session with Muffin framework."""
+from __future__ import annotations
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING, Callable, Optional, overload
+from typing import TYPE_CHECKING, Callable, ClassVar, Optional, overload
 
 from donald import Donald, TaskWrapper, logger
-from donald.worker import Worker
 from muffin.plugins import BasePlugin
 
 if TYPE_CHECKING:
     from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
+    from donald.worker import Worker
     from muffin import Application
 
 assert logger
@@ -20,7 +21,7 @@ class Plugin(BasePlugin):
 
     # Can be customized on setup
     name = "tasks"
-    defaults = {
+    defaults: ClassVar = {
         # Donald options
         "log_level": Donald.defaults["log_level"],
         "log_config": Donald.defaults["log_config"],
@@ -138,7 +139,6 @@ def setup_on_error(plugin: Plugin):
     if not worker_params.get("on_error"):
         maybe_sentry = plugin.app.plugins.get("sentry")
         if maybe_sentry:
-
             from muffin_sentry import Plugin as Sentry
 
             assert isinstance(maybe_sentry, Sentry)
