@@ -17,18 +17,20 @@ app = muffin.Application(DEBUG=True)
 tasks = Plugin(app, start_worker=True, start_scheduler=True)
 
 
-@tasks.task
+@tasks.task()
 async def task1():
     logger.info("Task1: done")
     return 42
 
 
-@tasks.schedule(2e-1)
-@tasks.task
+@tasks.task()
 async def ping():
     with open(Path(__file__).parent / "ping", "w") as f:
         f.write("PONG")
     logger.info("Ping: done")
+
+
+ping.schedule(2e-1)
 
 
 def test_base():

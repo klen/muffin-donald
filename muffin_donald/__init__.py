@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING, Callable, ClassVar, Optional, overload
+from typing import TYPE_CHECKING, ClassVar, Optional
 
-from donald import Donald, TaskWrapper, logger
+from donald import Donald, logger
 from muffin.plugins import BasePlugin
 
 if TYPE_CHECKING:
@@ -48,6 +48,7 @@ class Plugin(BasePlugin):
             backend_params=self.cfg.backend_params,
             worker_params=self.cfg.worker_params,
         )
+        self.task = self.manager.task
 
         @app.manage(lifespan=True)
         async def tasks_scheduler():
@@ -95,19 +96,6 @@ class Plugin(BasePlugin):
         if self.cfg.start_scheduler:
             await manager.scheduler.stop()
         await manager.stop()
-
-    @overload
-    def task(self, fn: Callable) -> TaskWrapper:
-        ...
-
-    @overload
-    def task(self, **params) -> Callable[[Callable], TaskWrapper]:
-        ...
-
-    def task(self, fn: Optional[Callable] = None, **params):
-        """Decorator to wrap a function into a Task object."""
-        """Register a task."""
-        return self.manager.task(fn=fn, **params)
 
     def schedule(self, interval: "TInterval"):
         """Schedule a task."""
