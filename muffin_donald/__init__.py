@@ -31,7 +31,6 @@ class Plugin(BasePlugin):
         # Muffin-donald specific options
         "start_worker": False,
         "start_scheduler": False,
-        "filelock": None,
     }
 
     manager: Donald
@@ -72,6 +71,15 @@ class Plugin(BasePlugin):
 
             await worker.wait()
 
+        @app.manage(lifespan=True)
+        async def tasks_healthcheck(timeout=10):
+            """Run tasks healthcheck."""
+            is_healthy = await self.manager.healthcheck(timeout=timeout)
+            if not is_healthy:
+                logger.error("Tasks manager is unhealthy")
+                raise SystemExit(1)
+            return is_healthy
+
     async def startup(self):
         """Startup self tasks manager."""
 
@@ -103,7 +111,7 @@ class Plugin(BasePlugin):
 
     def on_error(self, fn: "TVWorkerOnErrFn") -> "TVWorkerOnErrFn":
         """Register an error handler."""
-        assert iscoroutinefunction(fn)
+        assert iscoroutinefunction(fn), "on_error handler must be async function"
         self.manager.on_error(fn)
         return fn
 
@@ -127,9 +135,12 @@ def setup_on_error(plugin: Plugin):
     if not worker_params.get("on_error"):
         maybe_sentry = plugin.app.plugins.get("sentry")
         if maybe_sentry:
-            from muffin_sentry import Plugin as Sentry
+            from muffin_sentry.plugin import Plugin as Sentry
 
-            assert isinstance(maybe_sentry, Sentry)
+            assert isinstance(
+                maybe_sentry,
+                Sentry,
+            ), "Sentry plugin is not installed or not a valid instance"
             sentry: Sentry = maybe_sentry
 
             async def on_error(exc):
