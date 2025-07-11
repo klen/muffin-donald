@@ -71,13 +71,14 @@ class Plugin(BasePlugin):
 
             await worker.wait()
 
-        @app.manage(lifespan=True)
+        @app.manage
         async def tasks_healthcheck(timeout=10):
             """Run tasks healthcheck."""
-            is_healthy = await self.manager.healthcheck(timeout=timeout)
-            if not is_healthy:
-                logger.error("Tasks manager is unhealthy")
-                raise SystemExit(1)
+            async with self.manager:
+                is_healthy = await self.manager.healthcheck(timeout=timeout)
+                if not is_healthy:
+                    logger.error("Tasks manager is unhealthy")
+                    raise SystemExit(1)
             return is_healthy
 
     async def startup(self):
