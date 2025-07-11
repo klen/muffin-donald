@@ -1,4 +1,5 @@
 """Support session with Muffin framework."""
+
 from __future__ import annotations
 
 from inspect import iscoroutinefunction
@@ -16,7 +17,6 @@ assert logger
 
 
 class Plugin(BasePlugin):
-
     """Run periodic tasks."""
 
     # Can be customized on setup
@@ -135,7 +135,7 @@ def setup_on_error(plugin: Plugin):
     if not worker_params.get("on_error"):
         maybe_sentry = plugin.app.plugins.get("sentry")
         if maybe_sentry:
-            from muffin_sentry.plugin import Plugin as Sentry
+            from muffin_sentry.plugin import Plugin as Sentry  # noqa: PLC0415
 
             assert isinstance(
                 maybe_sentry,
