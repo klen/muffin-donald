@@ -1,12 +1,8 @@
 Muffin-Donald
 #############
 
-.. _description:
-
-**Muffin-Donald** -- Its a plugin for Muffin_ framework which provides support
-for asyncronous tasks
-
-.. _badges:
+**Muffin-Donald** is a plugin for the Muffin_ framework that provides support
+for asynchronous background tasks, workers, and scheduling.
 
 .. image:: https://github.com/klen/muffin-donald/workflows/tests/badge.svg
     :target: https://github.com/klen/muffin-donald/actions
@@ -20,116 +16,189 @@ for asyncronous tasks
     :target: https://pypi.org/project/muffin-donald/
     :alt: Python Versions
 
-.. _contents:
+Contents
+========
 
 .. contents::
 
-.. _requirements:
+Features
+========
+
+- ✅ Register async tasks
+- ✅ Run background workers
+- ✅ Schedule periodic tasks (cron or intervals)
+- ✅ RPC-style submit and wait for result
+- ✅ Muffin plugin integration with lifecycle management
 
 Requirements
-=============
+============
 
-- python >= 3.9
-
-.. _installation:
+- python >= 3.10
+- muffin >= 0.60.0
+- donald >= 0.1.0
 
 Installation
-=============
+============
 
-**Muffin-Donald** should be installed using pip: ::
+Install via pip::
 
     pip install muffin-donald
-
-.. _usage:
 
 Usage
 =====
 
-
-Initialize and setup the plugin:
+Initialize the plugin:
 
 .. code-block:: python
 
     import muffin
-    import muffin_donald
+    from muffin_donald import Plugin
 
-    # Create Muffin Application
-    app = muffin.Application('example')
+    app = muffin.Application("example")
 
-    # Initialize the plugin
-    # As alternative: tasks = muffin_donald.Plugin(app, **options)
-    tasks = muffin_donald.Plugin()
-    donald.setup(app)
+    tasks = Plugin(app, backend="redis", backend_params={
+        "url": "redis://localhost:6379/0"
+    }, start_worker=True, start_scheduler=True)
 
-
-And etc
-
-Options
--------
-
-=========================== =========================== ===========================
-Name                        Default value               Desctiption
---------------------------- --------------------------- ---------------------------
-**log_level**               ``INFO``                    Logger Level
-**log_config**              ``None``                    Logger config
-**backend**                 ``'memory'``                Backend name (memory, redis, amqp)
-**backend_params**          ``{}``                      Backend params
-**worker_params**           ``{}``                      Worker params
-**worker_lifespan**         ``False``                   Fun the application lifespan events with worker
-**start_worker**            ``False``                   Auto start a worker in the current process
-**start_scheduler**         ``False``                   Auto start a scheduler in the current process
-=========================== =========================== ===========================
-
-
-You are able to provide the options when you are initiliazing the plugin:
+Register a task:
 
 .. code-block:: python
 
-    donald.setup(app, start_worker=True)
+    @tasks.task()
+    async def my_task(x, y):
+        return x + y
 
-
-Or setup it inside ``Muffin.Application`` config using the ``TASKS_`` prefix:
+Submit task for background execution:
 
 .. code-block:: python
 
-   TASKS_START_WORKER = True
+    my_task.submit(1, 2)
 
-``Muffin.Application`` configuration options are case insensitive
+Submit and wait for result (RPC style):
 
+.. code-block:: python
 
-.. _bugtracker:
+    result = await my_task.submit_and_wait(1, 2)
+    print("Result:", result)  # Result: 3
 
-Bug tracker
+Schedule a periodic task:
+
+.. code-block:: python
+
+    @tasks.task()
+    async def periodic_task():
+        print("Periodic task executed")
+
+    periodic_task.schedule("*/5 * * * *")  # every 5 minutes
+
+Handle task errors with on_error:
+
+.. code-block:: python
+
+    @tasks.on_error
+    async def handle_error(exc):
+        print("Task error:", exc)
+
+Lifecycle hooks:
+
+.. code-block:: python
+
+    @tasks.on_start
+    async def startup():
+        print("Tasks manager started")
+
+    @tasks.on_stop
+    async def shutdown():
+        print("Tasks manager stopped")
+
+Healthcheck command:
+
+Muffin-Donald provides a CLI command for health checks::
+
+    muffin <app> tasks-healthcheck
+
+- Returns exit code 0 if healthy
+- Returns exit code 1 if unhealthy
+
+Commands
+========
+
++-------------------+-----------------------------+
+| Command           | Description                 |
++===================+=============================+
+| tasks-worker      | Run the worker process      |
++-------------------+-----------------------------+
+| tasks-scheduler   | Run the scheduler           |
++-------------------+-----------------------------+
+| tasks-healthcheck | Check manager health        |
++-------------------+-----------------------------+
+
+Configuration Options
+=====================
+
+You can configure the plugin via parameters or Muffin settings (with ``TASKS_`` prefix):
+
++------------------+-----------+-------------------------------------+
+| Name             | Default   | Description                         |
++==================+===========+=====================================+
+| log_level        | INFO      | Logger level                        |
++------------------+-----------+-------------------------------------+
+| log_config       | None      | Logger config                       |
++------------------+-----------+-------------------------------------+
+| backend          | memory    | Backend: memory, redis, amqp        |
++------------------+-----------+-------------------------------------+
+| backend_params   | {}        | Backend connection params           |
++------------------+-----------+-------------------------------------+
+| worker_params    | {}        | Worker params                       |
++------------------+-----------+-------------------------------------+
+| start_worker     | False     | Auto start a worker on startup      |
++------------------+-----------+-------------------------------------+
+| start_scheduler  | False     | Auto start a scheduler on startup   |
++------------------+-----------+-------------------------------------+
+
+Example in Muffin settings:
+
+.. code-block:: python
+
+    TASKS_BACKEND = "redis"
+    TASKS_BACKEND_PARAMS = {"url": "redis://localhost:6379/0"}
+    TASKS_START_WORKER = True
+    TASKS_START_SCHEDULER = True
+
+Testing
+=======
+
+Example using ``manage_lifespan``:
+
+.. code-block:: python
+
+    import pytest
+    from asgi_tools.tests import manage_lifespan
+
+    async def test_tasks(app, tasks):
+        async with manage_lifespan(app):
+            result = await my_task.submit_and_wait(1, 2)
+            assert result == 3
+
+Bug Tracker
 ===========
 
-If you have any suggestions, bug reports or
-annoyances please report them to the issue tracker
-at https://github.com/klen/muffin-donald/issues
-
-.. _contributing:
+Please report issues or suggestions at https://github.com/klen/muffin-donald/issues
 
 Contributing
 ============
 
-Development of Muffin-Donald happens at: https://github.com/klen/muffin-donald
-
+Development happens at: https://github.com/klen/muffin-donald
 
 Contributors
-=============
+============
 
-* klen_ (Kirill Klenov)
-
-.. _license:
+- klen_ (Kirill Klenov)
 
 License
-========
+=======
 
-Licensed under a `MIT license`_.
-
-.. _links:
-
+Licensed under the MIT license.
 
 .. _klen: https://github.com/klen
 .. _Muffin: https://github.com/klen/muffin
-
-.. _MIT license: http://opensource.org/licenses/MIT
