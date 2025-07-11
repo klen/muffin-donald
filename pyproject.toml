@@ -12,10 +12,10 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Internet :: WWW/HTTP",
   "Framework :: AsyncIO",
 ]
@@ -48,14 +48,14 @@ ignore_missing_imports = true
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py39,py310,py311,py312,pypy39
+envlist = py310,py311,py312,py313,pypy10
 
 [testenv]
 deps = -e .[tests]
 commands =
 	pytest --mypy tests.py
 
-[testenv:pypy39]
+[testenv:pypy10]
 deps = -e .[tests]
 commands =
 	pytest tests.py
@@ -64,7 +64,7 @@ commands =
 [tool.ruff]
 fix = true
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 exclude = [".venv", "docs", "examples"]
 
 [tool.ruff.lint]

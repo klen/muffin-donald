@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     services:
       rmq:
@@ -23,24 +23,24 @@ jobs:
         ports: ["5672:5672"]
 
     steps:
-    - name: Sleep 2s to make rmq start
-      run: sleep 2
+      - name: Sleep 2s to make rmq start
+        run: sleep 2
 
-    - uses: actions/checkout@main
-    - name: install poetry
-      run: pipx install poetry
+      - uses: actions/checkout@main
+      - name: install poetry
+        run: pipx install poetry
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@main
-      with:
-        cache: poetry
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@main
+        with:
+          cache: poetry
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install requirements
-      run: poetry install --with dev
+      - name: Install requirements
+        run: poetry install --with dev
 
-    - name: Check code
-      run: poetry run ruff check muffin_donald
+      - name: Check code
+        run: poetry run ruff check muffin_donald
 
-    - name: Test with pytest
-      run: poetry run pytest
+      - name: Test with pytest
+        run: poetry run pytest
