@@ -23,7 +23,7 @@ homepage = "https://github.com/klen/muffin-donald"
 repository = "https://github.com/klen/muffin-donald"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 muffin = "*"
 donald = "^2.0.1"
 
