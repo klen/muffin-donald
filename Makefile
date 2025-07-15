@@ -29,7 +29,7 @@ release:
 	git merge develop
 	git pull
 	@poetry version $(VERSION)
-	git commit -am "build(release): `poetry version -s`"
+	git commit -am "build(release): `poetry version -s` 🔧"
 	git tag `poetry version -s`
 	git checkout develop
 	git merge master
