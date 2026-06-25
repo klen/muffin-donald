@@ -1,6 +1,6 @@
 [project]
 name = "muffin-donald"
-version = "1.0.3"
+version = "1.0.4"
 description = "It's a plugin for Muffin framework which provides support for external APIs"
 authors = [{ name = "Kirill Klenov", email = "horneds@gmail.com" }]
 requires-python = ">=3.11,<4"
@@ -94,7 +94,7 @@ ignore = [
 ]
 
 [tool.bumpversion]
-current_version = "1.0.3"
+current_version = "1.0.4"
 commit = false
 tag = false
 
