@@ -33,7 +33,7 @@ Features
 Requirements
 ============
 
-- python >= 3.10
+- python >= 3.11
 - muffin >= 0.60.0
 - donald >= 0.1.0
 
@@ -113,9 +113,10 @@ Lifecycle hooks:
 
 Healthcheck command:
 
-Muffin-Donald provides a CLI command for health checks::
+Muffin-Donald provides CLI commands for health checks::
 
-    muffin <app> tasks-healthcheck
+    muffin <app> tasks-worker-health
+    muffin <app> tasks-scheduler-health
 
 - Returns exit code 0 if healthy
 - Returns exit code 1 if unhealthy
@@ -123,15 +124,17 @@ Muffin-Donald provides a CLI command for health checks::
 Commands
 ========
 
-+-------------------+-----------------------------+
-| Command           | Description                 |
-+===================+=============================+
-| tasks-worker      | Run the worker process      |
-+-------------------+-----------------------------+
-| tasks-scheduler   | Run the scheduler           |
-+-------------------+-----------------------------+
-| tasks-healthcheck | Check manager health        |
-+-------------------+-----------------------------+
++------------------------+-----------------------------+
+| Command                | Description                 |
++========================+=============================+
+| tasks-worker           | Run the worker process      |
++------------------------+-----------------------------+
+| tasks-scheduler        | Run the scheduler           |
++------------------------+-----------------------------+
+| tasks-worker-health    | Check worker health         |
++------------------------+-----------------------------+
+| tasks-scheduler-health | Check scheduler health      |
++------------------------+-----------------------------+
 
 Configuration Options
 =====================

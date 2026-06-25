@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING, ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar
 
 from donald import Donald, logger
 from muffin.plugins import BasePlugin
@@ -34,7 +34,7 @@ class Plugin(BasePlugin):
     }
 
     manager: Donald
-    worker: Optional[Worker] = None
+    worker: Worker | None = None
 
     def setup(self, app: "Application", **options):
         """Setup Donald tasks manager."""
@@ -64,10 +64,10 @@ class Plugin(BasePlugin):
             await worker.wait()
 
         @app.manage(lifespan=False, name=f"{self.name}-worker-health")
-        async def worker_healthcheck(timeout=10):
+        async def worker_healthcheck(timeout_sec=10):
             """Run tasks healthcheck."""
             async with self.manager:
-                is_healthy = await self.manager.healthcheck(timeout=timeout)
+                is_healthy = await self.manager.healthcheck(timeout=timeout_sec)
                 if not is_healthy:
                     logger.error("Tasks manager is unhealthy")
                     raise SystemExit(1)
