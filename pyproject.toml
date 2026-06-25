@@ -3,7 +3,7 @@ name = "muffin-donald"
 version = "1.0.3"
 description = "It's a plugin for Muffin framework which provides support for external APIs"
 authors = [{ name = "Kirill Klenov", email = "horneds@gmail.com" }]
-requires-python = ">=3.10,<4"
+requires-python = ">=3.11,<4"
 readme = "README.rst"
 license = "MIT"
 keywords = ["muffin", "asyncio", "trio", "curio"]
@@ -13,7 +13,6 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
