@@ -393,7 +393,7 @@ wheels = [
 
 [[package]]
 name = "muffin-donald"
-version = "1.0.4"
+version = "2.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "donald" },
