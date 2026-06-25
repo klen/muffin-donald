@@ -44,3 +44,6 @@ docs/_build
 /.ropeproject
 /.cache
 /ping
+/.mypy_cache
+/.pytest_cache
+/.ruff_cache

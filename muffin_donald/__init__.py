@@ -49,16 +49,8 @@ class Plugin(BasePlugin):
         )
         self.task = self.manager.task
 
-        @app.manage(lifespan=True)
-        async def tasks_scheduler():
-            """Run tasks scheduler."""
-            if not self.cfg.start_scheduler:
-                self.manager.scheduler.start()
-
-            await self.manager.scheduler.wait()
-
-        @app.manage(lifespan=True)
-        async def tasks_worker(*, scheduler=False):
+        @app.manage(lifespan=True, name=f"{self.name}-worker")
+        async def worker(*, scheduler=False):
             """Run tasks worker."""
             # Auto setup Sentry
             setup_on_error(self)
@@ -71,13 +63,33 @@ class Plugin(BasePlugin):
 
             await worker.wait()
 
-        @app.manage
-        async def tasks_healthcheck(timeout=10):
+        @app.manage(lifespan=False, name=f"{self.name}-worker-health")
+        async def worker_healthcheck(timeout=10):
             """Run tasks healthcheck."""
             async with self.manager:
                 is_healthy = await self.manager.healthcheck(timeout=timeout)
                 if not is_healthy:
                     logger.error("Tasks manager is unhealthy")
+                    raise SystemExit(1)
+            return is_healthy
+
+        @app.manage(lifespan=False, name=f"{self.name}-scheduler")
+        async def scheduler():
+            """Run tasks scheduler."""
+            async with self.manager:
+                scheduler = self.manager.scheduler
+                if not self.cfg.start_scheduler:
+                    scheduler.start()
+
+                await scheduler.wait()
+
+        @app.manage(lifespan=False, name=f"{self.name}-scheduler-health")
+        async def scheduler_healthcheck():
+            """Run tasks scheduler healthcheck."""
+            async with self.manager:
+                is_healthy = await self.manager.scheduler_healthcheck()
+                if not is_healthy:
+                    logger.error("Tasks scheduler is unhealthy")
                     raise SystemExit(1)
             return is_healthy
 

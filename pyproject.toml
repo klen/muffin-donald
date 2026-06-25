@@ -1,10 +1,11 @@
-[tool.poetry]
+[project]
 name = "muffin-donald"
 version = "1.0.3"
 description = "It's a plugin for Muffin framework which provides support for external APIs"
+authors = [{ name = "Kirill Klenov", email = "horneds@gmail.com" }]
+requires-python = ">=3.10,<4"
 readme = "README.rst"
 license = "MIT"
-authors = ["Kirill Klenov <horneds@gmail.com>"]
 keywords = ["muffin", "asyncio", "trio", "curio"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -18,25 +19,37 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Internet :: WWW/HTTP",
   "Framework :: AsyncIO",
+  "Programming Language :: Python :: 3.14",
 ]
-homepage = "https://github.com/klen/muffin-donald"
-repository = "https://github.com/klen/muffin-donald"
+dependencies = ["muffin", "donald"]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-muffin = "*"
-donald = "^2.0.1"
+[project.urls]
+Homepage = "https://github.com/klen/muffin-donald"
+Repository = "https://github.com/klen/muffin-donald"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-pytest = "*"
-pytest-mypy = "*"
-pytest-aio = { version = "*", extras = ["curio", "trio"] }
-pre-commit = "*"
-muffin_sentry = "*"
+[dependency-groups]
+dev = [
+  "ruff",
+  "pytest",
+  "pytest-mypy",
+  "pytest-aio[curio, trio]",
+  "pre-commit",
+  "muffin_sentry",
+]
+
+[tool.uv]
+default-groups = "all"
+
+[build-system]
+requires = ["uv_build>=0.11.5,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "muffin_donald"
+module-root = ""
 
 [tool.pytest.ini_options]
-addopts = "-xsv tests.py"
+addopts = "-xsv tests/"
 log_cli = true
 
 [tool.mypy]
@@ -86,6 +99,12 @@ ignore = [
   "TRY003",
 ]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.bumpversion]
+current_version = "0.10.4"
+commit = false
+tag = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
