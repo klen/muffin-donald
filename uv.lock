@@ -251,16 +251,16 @@ wheels = [
 
 [[package]]
 name = "donald"
-version = "3.2.0"
+version = "3.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aio-pika" },
     { name = "click" },
     { name = "crontab" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/53/3de0113d0ff9dec8109273434323030e03e0ff4e30e6dffab345bd957e2b/donald-3.2.0.tar.gz", hash = "sha256:249494e8408b51d123080c4801a5b572b0335ded34ee0f331a650edc9738d15e", size = 20234, upload-time = "2026-11-19T09:18:19.291Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/96/ac/4182bbebb801034e68d814d0fc860781e35f96a4f970037d6121b5f130f8/donald-3.3.0.tar.gz", hash = "sha256:d9f319373ce09da17d09e88bf301086fff5b2cf635081ee2553ab0f6e4aa9e22", size = 24355, upload-time = "2026-11-19T09:25:50.457Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/6d/a975a259e86251ae6dc43efd5fa6cb2efd73c4de8b3cf98e1b1111cde140/donald-3.2.0-py3-none-any.whl", hash = "sha256:d2e9cff7e510cdcc19ad02df608900cdc427d6085b2d025052efe9291fd67ad6", size = 17386, upload-time = "2026-11-19T09:18:18.18Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/e7/7ad316aa1869458db49a9a529f4220ac0c4afe97fa4cf10fae6269530601/donald-3.3.0-py3-none-any.whl", hash = "sha256:28c0e09a32007bd6b0d8f1ecba41f9de1df708e3476cdb7f3c70de6203384ebc", size = 19510, upload-time = "2026-11-19T09:25:49.192Z" },
 ]
 
 [[package]]
