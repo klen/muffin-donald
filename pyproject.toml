@@ -97,6 +97,7 @@ ignore = [
   "N804",
   "A003",
   "TRY003",
+  "CPY001",
 ]
 
 [tool.bumpversion]
