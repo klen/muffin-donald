@@ -3,15 +3,23 @@
 from __future__ import annotations
 
 from inspect import iscoroutinefunction
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, ParamSpec, TypeVar
 
 from donald import Donald, logger
 from muffin.plugins import BasePlugin
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Mapping
+    from typing import Unpack
+
     from donald.manager import TInterval, TVWorkerOnErrFn, TVWorkerOnFn
+    from donald.tasks import TaskWrapper
+    from donald.types import TTaskParamsPartial, TWorkerOnErrFn
     from donald.worker import Worker
     from muffin import Application
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 assert logger
 
@@ -21,7 +29,7 @@ class Plugin(BasePlugin):
 
     # Can be customized on setup
     name = "tasks"
-    defaults: ClassVar = {
+    defaults: ClassVar[Mapping[str, Any]] = {
         # Donald options
         "log_level": Donald.defaults["log_level"],
         "log_config": Donald.defaults["log_config"],
@@ -36,9 +44,15 @@ class Plugin(BasePlugin):
     manager: Donald
     worker: Worker | None = None
 
-    def setup(self, app: "Application", **options):
+    def setup(
+        self,
+        app: "Application",
+        *,
+        name: str | None = None,
+        **options: Any,
+    ) -> bool:
         """Setup Donald tasks manager."""
-        super().setup(app, **options)
+        result = super().setup(app, name=name, **options)
 
         self.manager = Donald(
             log_level=self.cfg.log_level,
@@ -47,10 +61,9 @@ class Plugin(BasePlugin):
             backend_params=self.cfg.backend_params,
             worker_params=self.cfg.worker_params,
         )
-        self.task = self.manager.task
 
         @app.manage(lifespan=True, name=f"{self.name}-worker")
-        async def worker(*, scheduler=False):
+        async def worker(*, scheduler: bool = False) -> None:
             """Run tasks worker."""
             # Auto setup Sentry
             setup_on_error(self)
@@ -64,7 +77,7 @@ class Plugin(BasePlugin):
             await worker.wait()
 
         @app.manage(lifespan=False, name=f"{self.name}-worker-health")
-        async def worker_healthcheck(timeout_sec=10):
+        async def worker_healthcheck(timeout_sec: float = 10) -> bool:
             """Run tasks healthcheck."""
             async with self.manager:
                 is_healthy = await self.manager.healthcheck(timeout=timeout_sec)
@@ -74,7 +87,7 @@ class Plugin(BasePlugin):
             return is_healthy
 
         @app.manage(lifespan=False, name=f"{self.name}-scheduler")
-        async def scheduler():
+        async def scheduler() -> None:
             """Run tasks scheduler."""
             async with self.manager:
                 scheduler = self.manager.scheduler
@@ -84,7 +97,7 @@ class Plugin(BasePlugin):
                 await scheduler.wait()
 
         @app.manage(lifespan=False, name=f"{self.name}-scheduler-health")
-        async def scheduler_healthcheck():
+        async def scheduler_healthcheck() -> bool:
             """Run tasks scheduler healthcheck."""
             async with self.manager:
                 is_healthy = await self.manager.scheduler_healthcheck()
@@ -93,7 +106,9 @@ class Plugin(BasePlugin):
                     raise SystemExit(1)
             return is_healthy
 
-    async def startup(self):
+        return result
+
+    async def startup(self) -> None:
         """Startup self tasks manager."""
 
         setup_on_error(self)
@@ -108,7 +123,7 @@ class Plugin(BasePlugin):
         if self.cfg.start_scheduler:
             manager.scheduler.start()
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown self tasks manager."""
         manager = self.manager
         if self.worker is not None:
@@ -118,11 +133,23 @@ class Plugin(BasePlugin):
             await manager.scheduler.stop()
         await manager.stop()
 
-    def schedule(self, interval: "TInterval"):
+    def task(
+        self,
+        fn: Any = ...,
+        /,
+        **params: "Unpack[TTaskParamsPartial]",
+    ) -> "Callable[[Callable[P, Awaitable[R]] | Callable[P, R]], TaskWrapper[P, R]]":
+        """Decorator to wrap a function into a Task object."""
+        return self.manager.task(fn, **params)
+
+    def schedule(
+        self,
+        interval: "TInterval",
+    ) -> "Callable[[TaskWrapper[P, R]], TaskWrapper[P, R]]":
         """Schedule a task."""
         return self.manager.schedule(interval)
 
-    def on_error(self, fn: "TVWorkerOnErrFn") -> "TVWorkerOnErrFn":
+    def on_error(self, fn: "TVWorkerOnErrFn") -> "TWorkerOnErrFn":
         """Register an error handler."""
         assert iscoroutinefunction(fn), "on_error handler must be async function"
         self.manager.on_error(fn)
@@ -139,7 +166,7 @@ class Plugin(BasePlugin):
         return fn
 
 
-def setup_on_error(plugin: Plugin):
+def setup_on_error(plugin: Plugin) -> None:
     """Generate on_error handler for Donald."""
     manager = plugin.manager
     worker_params = manager._params["worker_params"]
@@ -156,7 +183,7 @@ def setup_on_error(plugin: Plugin):
             ), "Sentry plugin is not installed or not a valid instance"
             sentry: Sentry = maybe_sentry
 
-            async def on_error(exc):
+            async def on_error(exc: BaseException) -> None:
                 sentry.capture_exception(exc)
 
             plugin.on_error(on_error)
