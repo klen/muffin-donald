@@ -138,8 +138,8 @@ class Plugin(BasePlugin):
         fn: Any = ...,
         /,
         **params: "Unpack[TTaskParamsPartial]",
-    ) -> "Callable[[Callable[P, Awaitable[R]] | Callable[P, R]], TaskWrapper[P, R]]":
-        """Decorator to wrap a function into a Task object."""
+    ) -> "Callable[[Callable[P, Awaitable[R]]], TaskWrapper[P, R]]":
+        """Decorator to wrap a coroutine function into a Task object."""
         return self.manager.task(fn, **params)
 
     def schedule(
